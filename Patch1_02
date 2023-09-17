@@ -1,0 +1,30 @@
+int main(void) {
+  ultrasonic_init();  // Initialize the ultrasonic sensor
+
+  // Set up an LED on pin PD7 (you can choose another pin if you prefer)
+  DDRD |= (1 << PD7);
+
+  while (1) {
+    uint16_t distance = ultrasonic_measure_distance();
+
+    // Check for timeout (invalid reading)
+    if (distance == 0xFFFF) {
+      // Handle timeout (invalid reading) here
+      // You might want to print an error message or take other actions
+    } else {
+      // Check if the distance is between 12 and 46 cm
+      if (distance >= 12 && distance <= 46) {
+        // Distance is in the desired range, turn on the LED
+        PORTD |= (1 << PD7);
+      } else {
+        // Distance is outside the desired range, turn off the LED
+        PORTD &= ~(1 << PD7);
+      }
+      
+      // For now, we are just delaying before taking the next reading
+      _delay_ms(1000);
+    }
+  }
+
+  return 0;
+}
