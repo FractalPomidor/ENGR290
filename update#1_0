@@ -1,0 +1,23 @@
+int ultrasonic_measure_distance() {
+  // Send a pulse to initiate a measurement
+  PORTB |= (1 << TRIG_PIN);
+  _delay_us(10);
+  PORTB &= ~(1 << TRIG_PIN);
+
+  uint16_t pulse_duration = 0;
+  uint16_t timeout = 30000; // Adjust as necessary
+  while (!(PINB & (1 << ECHO_PIN))) 
+  {
+    if (timeout-- == 0) return -1; // timeout, return -1
+  }
+  
+  while (PINB & (1 << ECHO_PIN)) 
+  {
+    if (pulse_duration++ >= timeout) return -1; // timeout, return -1
+    _delay_us(1);
+  }
+  
+  int distance_cm = (int)(((float)pulse_duration * 0.0343) / 2.0);
+  
+  return distance_cm;
+}
