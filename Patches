@@ -1,0 +1,59 @@
+#define F_CPU 16000000UL  // Define the CPU clock speed (16MHz for Arduino Nano)
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdio.h>
+
+#define TRIG_PIN PD5  // Define the TRIG pin (can choose other pins)
+#define ECHO_PIN PD6  // Define the ECHO pin (can choose other pins)
+
+void ultrasonic_init() {
+  // Set TRIG_PIN as output and ECHO_PIN as input
+  DDRD |= (1 << TRIG_PIN);
+  DDRD &= ~(1 << ECHO_PIN);
+}
+
+uint16_t ultrasonic_measure_distance() {
+  // Send a 10us pulse to the TRIG pin
+  PORTD |= (1 << TRIG_PIN);
+  _delay_us(10);
+  PORTD &= ~(1 << TRIG_PIN);
+
+  uint16_t pulse_duration = 0;
+  uint16_t timeout = 30000; // Adjust as necessary
+  
+  // Wait for the echo pin to get high (pulse start)
+  while (!(PIND & (1 << ECHO_PIN))) {
+    if (timeout-- == 0) return 0xFFFF; // timeout, return maximum distance
+  }
+
+  // Measure the duration of high pulse on the ECHO pin (pulse duration)
+  while (PIND & (1 << ECHO_PIN)) {
+    if (pulse_duration++ >= timeout) return 0xFFFF; // timeout, return maximum distance
+    _delay_us(1);
+  }
+
+  // Convert pulse duration to distance in cm
+  uint16_t distance_cm = pulse_duration / 58;
+  
+  return distance_cm;
+}
+
+int main(void) {
+  ultrasonic_init();  // Initialize the ultrasonic sensor
+
+  while (1) {
+    uint16_t distance = ultrasonic_measure_distance();
+
+    // Check for timeout (invalid reading)
+    if (distance == 0xFFFF) {
+      // Handle timeout (invalid reading) here
+      // You might want to print an error message or take other actions
+    } else {
+      // Use distance value here
+      // For now, we are just delaying before taking the next reading
+      _delay_ms(1000);
+    }
+  }
+
+  return 0;
+}
